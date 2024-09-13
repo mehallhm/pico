@@ -4,12 +4,20 @@ time is limited, life is short. built cool shit
 
 ## databases
 
-- [] sqlite
-- [] redis
-- [] mongodb
+- [ ] sqlite
+- [ ] redis
+- [ ] mongodb
 
 ## networking
 
-- [] http server / http 1.0
-- [] tcp
-- [] websocket
+- [ ] http server / http 1.0
+- [ ] tcp
+- [ ] websocket
+
+## unix
+
+- [ ] grep
+
+## Other
+
+- [ ] regex engine
