@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/mehallhm/picotata/engine"
 )
 
@@ -22,6 +24,8 @@ func main() {
 type model struct {
 	textInput textinput.Model
 	output    string
+	table     table.Model
+	showTable bool
 	err       error
 }
 
@@ -29,6 +33,7 @@ func initalModel() model {
 	ti := textinput.New()
 	ti.Placeholder = "help"
 	ti.Focus()
+	ti.Prompt = "| "
 	ti.CharLimit = 156
 	ti.Width = 20
 
@@ -38,34 +43,59 @@ func initalModel() model {
 	}
 }
 
-type cmdMsg string
-
-func executeCmd(cmd string) tea.Cmd {
-	return func() tea.Msg {
-		statement, err := engine.PrepareStatement(cmd)
-		if err != nil {
-			return errMsg(err)
-		}
-
-		out, err := engine.ExecuteStatement(statement)
-		if err != nil {
-			return errMsg(err)
-		}
-
-		return cmdMsg(out)
-	}
-}
-
 func (m model) Init() tea.Cmd {
 	return tea.Batch(textinput.Blink, tea.EnterAltScreen)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
+	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
 	case cmdMsg:
-		m.output = string(msg)
+		switch msg.form {
+		case engine.TextDisplay:
+			m.output = msg.msg
+		case engine.TableDisplay:
+			columns := []table.Column{}
+			for _, name := range msg.data.Columns {
+				columns = append(columns, table.Column{Title: name, Width: 10})
+			}
+
+			rows := []table.Row{}
+			for rowIdx := 0; rowIdx < len(msg.data.Data[columns[0].Title]); rowIdx++ {
+				row := make(table.Row, 0, len(msg.data.Data[columns[0].Title]))
+				for _, col := range msg.data.Data {
+					row = append(row, fmt.Sprintf("%v", col[rowIdx]))
+				}
+
+				rows = append(rows, row)
+			}
+
+			t := table.New(
+				table.WithColumns(columns),
+				table.WithFocused(true),
+				table.WithRows(rows),
+				table.WithHeight(10),
+			)
+			s := table.DefaultStyles()
+
+			s.Header = s.Header.
+				BorderStyle(lipgloss.NormalBorder()).
+				BorderForeground(lipgloss.Color("240")).
+				BorderBottom(true).
+				Bold(false)
+			s.Selected = s.Selected.
+				Foreground(lipgloss.Color("229")).
+				Background(lipgloss.Color("57")).
+				Bold(false)
+			t.SetStyles(s)
+
+			m.showTable = true
+			m.table = t
+			m.textInput.Blur()
+
+		}
 		return m, nil
 
 	case tea.KeyMsg:
@@ -79,20 +109,65 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, executeCmd(val)
 		}
 
+		if m.showTable {
+			m.table, cmd = m.table.Update(msg)
+			cmds = append(cmds, cmd)
+		}
+
+		m.textInput, cmd = m.textInput.Update(msg)
+		cmds = append(cmds, cmd)
+
 	// We handle errors just like any other message
 	case errMsg:
 		m.err = msg
 		return m, nil
+
 	}
 
-	m.textInput, cmd = m.textInput.Update(msg)
-	return m, cmd
+	return m, tea.Batch(cmds...)
 }
 
 func (m model) View() string {
+	var baseStyle = lipgloss.NewStyle().
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color("240"))
+	if m.showTable {
+		return fmt.Sprintf(
+			"Input a command\n\n%s\n\n%s\n",
+			m.textInput.View(),
+			m.output,
+		) + baseStyle.Render(m.table.View()) + "\n"
+	}
+
 	return fmt.Sprintf(
-		"Input a command\n\n%s\n\nOut:\n %s\n",
+		"Input a command\n\n%s\n\n%s\n",
 		m.textInput.View(),
 		m.output,
 	) + "\n"
+}
+
+type cmdMsg struct {
+	msg  string
+	data engine.Dataframe
+	form engine.DisplayType
+}
+
+func executeCmd(cmd string) tea.Cmd {
+	return func() tea.Msg {
+		statement, err := engine.PrepareStatement(cmd)
+		if err != nil {
+			return errMsg(err)
+		}
+
+		out, err := engine.ExecuteStatement(statement)
+		if err != nil {
+			return errMsg(err)
+		}
+
+		return cmdMsg{
+			msg:  out.Text,
+			form: out.Form,
+			data: out.Data,
+		}
+	}
 }
