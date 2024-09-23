@@ -34,7 +34,7 @@ func Load(args []string) (*Dataframe, error) {
 		for rowIdx := 1; rowIdx < len(records); rowIdx++ {
 			val, err := strconv.ParseFloat(strings.TrimSpace(records[rowIdx][colIdx]), 64)
 			if err != nil {
-				return nil, err
+				continue
 			}
 			table[records[0][colIdx]] = append(table[records[0][colIdx]], val)
 		}

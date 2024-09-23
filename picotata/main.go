@@ -31,11 +31,11 @@ type model struct {
 
 func initalModel() model {
 	ti := textinput.New()
-	ti.Placeholder = "help"
+	ti.Placeholder = "type a command or `quit` to exit"
 	ti.Focus()
 	ti.Prompt = "| "
-	ti.CharLimit = 156
-	ti.Width = 20
+	ti.CharLimit = 256
+	ti.Width = 50
 
 	return model{
 		textInput: ti,
@@ -55,6 +55,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case cmdMsg:
 		switch msg.form {
 		case engine.TextDisplay:
+			m.table.Blur()
+			m.showTable = false
+			m.textInput.Focus()
 			m.output = msg.msg
 		case engine.TableDisplay:
 			columns := []table.Column{}
@@ -74,9 +77,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			t := table.New(
 				table.WithColumns(columns),
-				table.WithFocused(true),
 				table.WithRows(rows),
-				table.WithHeight(10),
+				table.WithHeight(20),
 			)
 			s := table.DefaultStyles()
 
@@ -86,22 +88,61 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				BorderBottom(true).
 				Bold(false)
 			s.Selected = s.Selected.
-				Foreground(lipgloss.Color("229")).
-				Background(lipgloss.Color("57")).
+				Foreground(lipgloss.Color("240")).
+				Background(lipgloss.Color("0")).
 				Bold(false)
 			t.SetStyles(s)
 
 			m.showTable = true
 			m.table = t
-			m.textInput.Blur()
 
 		}
 		return m, nil
 
 	case tea.KeyMsg:
 		switch msg.Type {
-		case tea.KeyCtrlC, tea.KeyEsc:
+		case tea.KeyCtrlC:
 			return m, tea.Quit
+
+		case tea.KeyTab:
+			if m.showTable {
+				if m.table.Focused() {
+					m.table.Blur()
+					m.textInput.Focus()
+
+					s := table.DefaultStyles()
+
+					s.Header = s.Header.
+						BorderStyle(lipgloss.NormalBorder()).
+						BorderForeground(lipgloss.Color("240")).
+						BorderBottom(true).
+						Bold(false)
+					s.Selected = s.Selected.
+						Foreground(lipgloss.Color("229")).
+						Bold(false)
+
+					m.table.SetStyles(s)
+				} else {
+					m.textInput.Blur()
+					m.table.Focus()
+
+					s := table.DefaultStyles()
+
+					s.Header = s.Header.
+						BorderStyle(lipgloss.NormalBorder()).
+						BorderForeground(lipgloss.Color("240")).
+						BorderBottom(true).
+						Bold(false)
+					s.Selected = s.Selected.
+						Foreground(lipgloss.Color("229")).
+						Background(lipgloss.Color("57")).
+						Bold(false)
+
+					m.table.SetStyles(s)
+				}
+			}
+
+			return m, textinput.Blink
 
 		case tea.KeyEnter:
 			val := m.textInput.Value()
@@ -131,6 +172,7 @@ func (m model) View() string {
 	var baseStyle = lipgloss.NewStyle().
 		BorderStyle(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("240"))
+
 	if m.showTable {
 		return fmt.Sprintf(
 			"Input a command\n\n%s\n\n%s\n",

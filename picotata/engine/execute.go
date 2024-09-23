@@ -32,6 +32,8 @@ func ExecuteStatement(statement *Statement) (FunctionReturn, error) {
 	case CountStatement:
 		count, err := Count(df)
 		return FunctionReturn{Form: TextDisplay, Text: fmt.Sprintf("%v", count)}, err
+	case SummarizeStatement:
+		return FunctionReturn{Form: TextDisplay, Text: "counts here"}, nil
 	}
 
 	return FunctionReturn{Form: TextDisplay, Text: "cmd not found"}, nil

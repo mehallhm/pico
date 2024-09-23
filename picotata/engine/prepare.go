@@ -26,6 +26,10 @@ func PrepareStatement(input string) (*Statement, error) {
 		return &Statement{
 			Type: CountStatement,
 		}, nil
+	case strings.HasPrefix(input, "summarize"):
+		return &Statement{
+			Type: SummarizeStatement,
+		}, nil
 	default:
 		return nil, fmt.Errorf("unknown command")
 	}
