@@ -6,28 +6,27 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
-func Load(args []string) (*Dataframe, error) {
+func Load(df *Dataframe, args []string) (LoadModel, error) {
 	if len(args) != 1 {
-		return nil, fmt.Errorf("incorrect arguments")
+		return LoadModel{}, fmt.Errorf("incorrect arguments")
 	}
 
 	f, err := os.Open(args[0])
 	if err != nil {
-		return nil, err
+		return LoadModel{}, err
 	}
 
 	r := csv.NewReader(f)
 	records, err := r.ReadAll()
 	if err != nil {
-		return nil, err
+		return LoadModel{}, err
 	}
 
-	df := Dataframe{
-		Columns: records[0],
-	}
-
+	df.Columns = records[0]
 	table := make(map[string][]float64, len(records[0]))
 
 	for colIdx := 0; colIdx < len(records[0]); colIdx++ {
@@ -42,9 +41,26 @@ func Load(args []string) (*Dataframe, error) {
 
 	df.Data = table
 
-	return &df, nil
+	return LoadModel{text: "Loaded!", focused: false}, nil
 }
 
-func Count(df *Dataframe) (int, error) {
-	return len(df.Data[df.Columns[0]]), nil
+type LoadModel struct {
+	text    string
+	focused bool
 }
+
+func (m LoadModel) Init() tea.Cmd {
+	return nil
+}
+
+func (m LoadModel) Update(msg tea.Msg) (EngineModel, tea.Cmd) {
+	return m, nil
+}
+
+func (m LoadModel) View() string {
+	return m.text
+}
+
+func (m LoadModel) Focus() {}
+
+func (m LoadModel) Blur() {}

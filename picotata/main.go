@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/mehallhm/picotata/engine"
 )
 
@@ -23,10 +21,10 @@ func main() {
 
 type model struct {
 	textInput textinput.Model
-	output    string
-	table     table.Model
-	showTable bool
-	err       error
+
+	outputModel engine.EngineModel
+
+	err error
 }
 
 func initalModel() model {
@@ -38,8 +36,9 @@ func initalModel() model {
 	ti.Width = 50
 
 	return model{
-		textInput: ti,
-		err:       nil,
+		textInput:   ti,
+		err:         nil,
+		outputModel: engine.TextModel{Text: "hi"},
 	}
 }
 
@@ -53,51 +52,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case cmdMsg:
-		switch msg.form {
-		case engine.TextDisplay:
-			m.table.Blur()
-			m.showTable = false
-			m.textInput.Focus()
-			m.output = msg.msg
-		case engine.TableDisplay:
-			columns := []table.Column{}
-			for _, name := range msg.data.Columns {
-				columns = append(columns, table.Column{Title: name, Width: 10})
-			}
-
-			rows := []table.Row{}
-			for rowIdx := 0; rowIdx < len(msg.data.Data[columns[0].Title]); rowIdx++ {
-				row := make(table.Row, 0, len(msg.data.Data[columns[0].Title]))
-				for _, col := range msg.data.Data {
-					row = append(row, fmt.Sprintf("%v", col[rowIdx]))
-				}
-
-				rows = append(rows, row)
-			}
-
-			t := table.New(
-				table.WithColumns(columns),
-				table.WithRows(rows),
-				table.WithHeight(20),
-			)
-			s := table.DefaultStyles()
-
-			s.Header = s.Header.
-				BorderStyle(lipgloss.NormalBorder()).
-				BorderForeground(lipgloss.Color("240")).
-				BorderBottom(true).
-				Bold(false)
-			s.Selected = s.Selected.
-				Foreground(lipgloss.Color("240")).
-				Background(lipgloss.Color("0")).
-				Bold(false)
-			t.SetStyles(s)
-
-			m.showTable = true
-			m.table = t
-
-		}
-		return m, nil
+		m.outputModel = msg
 
 	case tea.KeyMsg:
 		switch msg.Type {
@@ -105,41 +60,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case tea.KeyTab:
-			if m.showTable {
-				if m.table.Focused() {
-					m.table.Blur()
-					m.textInput.Focus()
+			if m.textInput.Focused() {
+				m.textInput.Blur()
+				m.outputModel.Blur()
 
-					s := table.DefaultStyles()
-
-					s.Header = s.Header.
-						BorderStyle(lipgloss.NormalBorder()).
-						BorderForeground(lipgloss.Color("240")).
-						BorderBottom(true).
-						Bold(false)
-					s.Selected = s.Selected.
-						Foreground(lipgloss.Color("229")).
-						Bold(false)
-
-					m.table.SetStyles(s)
-				} else {
-					m.textInput.Blur()
-					m.table.Focus()
-
-					s := table.DefaultStyles()
-
-					s.Header = s.Header.
-						BorderStyle(lipgloss.NormalBorder()).
-						BorderForeground(lipgloss.Color("240")).
-						BorderBottom(true).
-						Bold(false)
-					s.Selected = s.Selected.
-						Foreground(lipgloss.Color("229")).
-						Background(lipgloss.Color("57")).
-						Bold(false)
-
-					m.table.SetStyles(s)
-				}
+			} else {
+				m.textInput.Focus()
+				m.outputModel.Focus()
 			}
 
 			return m, textinput.Blink
@@ -150,10 +77,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, executeCmd(val)
 		}
 
-		if m.showTable {
-			m.table, cmd = m.table.Update(msg)
-			cmds = append(cmds, cmd)
-		}
+		m.outputModel, cmd = m.outputModel.Update(msg)
+		cmds = append(cmds, cmd)
 
 		m.textInput, cmd = m.textInput.Update(msg)
 		cmds = append(cmds, cmd)
@@ -169,30 +94,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	var baseStyle = lipgloss.NewStyle().
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("240"))
-
-	if m.showTable {
-		return fmt.Sprintf(
-			"Input a command\n\n%s\n\n%s\n",
-			m.textInput.View(),
-			m.output,
-		) + baseStyle.Render(m.table.View()) + "\n"
-	}
-
 	return fmt.Sprintf(
 		"Input a command\n\n%s\n\n%s\n",
 		m.textInput.View(),
-		m.output,
-	) + "\n"
+		m.outputModel.View(),
+	)
 }
 
-type cmdMsg struct {
-	msg  string
-	data engine.Dataframe
-	form engine.DisplayType
-}
+type cmdMsg engine.EngineModel
 
 func executeCmd(cmd string) tea.Cmd {
 	return func() tea.Msg {
@@ -206,10 +115,6 @@ func executeCmd(cmd string) tea.Cmd {
 			return errMsg(err)
 		}
 
-		return cmdMsg{
-			msg:  out.Text,
-			form: out.Form,
-			data: out.Data,
-		}
+		return cmdMsg(out)
 	}
 }

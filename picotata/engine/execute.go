@@ -1,10 +1,6 @@
 package engine
 
-import (
-	"fmt"
-)
-
-var df *Dataframe = nil
+var df *Dataframe = &Dataframe{}
 
 type DisplayType int
 
@@ -20,21 +16,20 @@ type FunctionReturn struct {
 	Data Dataframe
 }
 
-func ExecuteStatement(statement *Statement) (FunctionReturn, error) {
+func ExecuteStatement(statement *Statement) (EngineModel, error) {
 	switch statement.Type {
-	case InfoStatement:
-		return FunctionReturn{Form: TextDisplay, Text: "  •         \n┏┓┓┏┏┓╋┏┓╋┏┓\n┣┛┗┗┗┛┗┗┻┗┗┻\n┛           \na tiny stata clone\n\n"}, nil
-	case HelpStatement:
-		return FunctionReturn{Form: TextDisplay, Text: "no help for you"}, nil
+	// case InfoStatement:
+	// 	return FunctionReturn{Form: TextDisplay, Text: "  •         \n┏┓┓┏┏┓╋┏┓╋┏┓\n┣┛┗┗┗┛┗┗┻┗┗┻\n┛           \na tiny stata clone\n\n"}, nil
+	// case HelpStatement:
+	// 	return FunctionReturn{Form: TextDisplay, Text: "no help for you"}, nil
 	case LoadStatement:
-		df, _ = Load(statement.Args)
-		return FunctionReturn{Form: TableDisplay, Data: *df}, nil
+		return Load(df, statement.Args)
 	case CountStatement:
-		count, err := Count(df)
-		return FunctionReturn{Form: TextDisplay, Text: fmt.Sprintf("%v", count)}, err
-	case SummarizeStatement:
-		return FunctionReturn{Form: TextDisplay, Text: "counts here"}, nil
+		return Count(df)
+		// case SummarizeStatement:
+		// 	return FunctionReturn{Form: TextDisplay, Text: "counts here"}, nil
 	}
 
-	return FunctionReturn{Form: TextDisplay, Text: "cmd not found"}, nil
+	// return FunctionReturn{Form: TextDisplay, Text: "cmd not found"}, nil
+	return CountModel{text: "cmd not found", focused: false}, nil
 }
