@@ -6,10 +6,12 @@ type StatementType int
 
 const (
 	QuitStatement = iota
+	MissingStatement
 	InfoStatement
 	HelpStatement
 	LoadStatement
 	CountStatement
+	BrowseStatement
 	SummarizeStatement
 )
 
@@ -33,8 +35,7 @@ type EngineModel interface {
 }
 
 type TextModel struct {
-	Text    string
-	focused bool
+	Text string
 }
 
 func (m TextModel) Init() tea.Cmd {

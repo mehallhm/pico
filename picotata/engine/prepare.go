@@ -1,13 +1,16 @@
 package engine
 
 import (
-	"fmt"
 	"strings"
 )
 
 func PrepareStatement(input string) (*Statement, error) {
 	input = strings.TrimSpace(input)
 	switch {
+	case strings.HasPrefix(input, "quit"):
+		return &Statement{
+			Type: QuitStatement,
+		}, nil
 	case strings.HasPrefix(input, "info"):
 		return &Statement{
 			Type: InfoStatement,
@@ -30,7 +33,13 @@ func PrepareStatement(input string) (*Statement, error) {
 		return &Statement{
 			Type: SummarizeStatement,
 		}, nil
+	case strings.HasPrefix(input, "browse"):
+		return &Statement{
+			Type: BrowseStatement,
+		}, nil
 	default:
-		return nil, fmt.Errorf("unknown command")
+		return &Statement{
+			Type: MissingStatement,
+		}, nil
 	}
 }

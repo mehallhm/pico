@@ -38,7 +38,7 @@ func initalModel() model {
 	return model{
 		textInput:   ti,
 		err:         nil,
-		outputModel: engine.TextModel{Text: "hi"},
+		outputModel: engine.TextModel{Text: "  •         \n┏┓┓┏┏┓╋┏┓╋┏┓\n┣┛┗┗┗┛┗┗┻┗┗┻\n┛           \na tiny stata clone\n\n"},
 	}
 }
 
@@ -53,6 +53,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case cmdMsg:
 		m.outputModel = msg
+		cmd = m.outputModel.Init()
+		return m, cmd
 
 	case tea.KeyMsg:
 		switch msg.Type {
@@ -62,14 +64,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyTab:
 			if m.textInput.Focused() {
 				m.textInput.Blur()
-				m.outputModel.Blur()
+				m.outputModel.Focus()
 
+				return m, nil
 			} else {
 				m.textInput.Focus()
-				m.outputModel.Focus()
-			}
+				m.outputModel.Blur()
 
-			return m, textinput.Blink
+				return m, textinput.Blink
+			}
 
 		case tea.KeyEnter:
 			val := m.textInput.Value()
@@ -77,18 +80,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, executeCmd(val)
 		}
 
-		m.outputModel, cmd = m.outputModel.Update(msg)
-		cmds = append(cmds, cmd)
-
-		m.textInput, cmd = m.textInput.Update(msg)
-		cmds = append(cmds, cmd)
-
 	// We handle errors just like any other message
 	case errMsg:
 		m.err = msg
 		return m, nil
 
 	}
+
+	m.outputModel, cmd = m.outputModel.Update(msg)
+	cmds = append(cmds, cmd)
+
+	m.textInput, cmd = m.textInput.Update(msg)
+	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)
 }
