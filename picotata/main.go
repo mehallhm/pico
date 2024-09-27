@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/mehallhm/picotata/engine"
 )
 
@@ -27,18 +29,22 @@ type model struct {
 	err error
 }
 
+var promptStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("200")).Bold(true)
+
+var logoStyle = lipgloss.NewStyle().Padding(0, 2).Foreground(lipgloss.Color("61"))
+
 func initalModel() model {
 	ti := textinput.New()
 	ti.Placeholder = "type a command or `quit` to exit"
 	ti.Focus()
-	ti.Prompt = "| "
-	ti.CharLimit = 256
+	ti.Prompt = promptStyle.Render(">> ")
+	ti.CharLimit = 255
 	ti.Width = 50
 
 	return model{
 		textInput:   ti,
 		err:         nil,
-		outputModel: engine.TextModel{Text: "  •         \n┏┓┓┏┏┓╋┏┓╋┏┓\n┣┛┗┗┗┛┗┗┻┗┗┻\n┛           \na tiny stata clone\n\n"},
+		outputModel: engine.TextModel{Text: logoStyle.Render("  •         \n┏┓┓┏┏┓╋┏┓╋┏┓\n┣┛┗┗┗┛┗┗┻┗┗┻\n┛           \na tiny stata clone\n\n")},
 	}
 }
 
@@ -75,9 +81,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case tea.KeyEnter:
-			val := m.textInput.Value()
-			m.textInput.SetValue("")
-			return m, executeCmd(val)
+			if m.textInput.Focused() {
+				val := m.textInput.Value()
+				m.textInput.SetValue("")
+				return m, executeCmd(val)
+			}
 		}
 
 	// We handle errors just like any other message
@@ -96,8 +104,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+var headerTextStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("2"))
+var headerSlashesStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
+
 func (m model) View() string {
-	return fmt.Sprintf(
+	header := headerTextStyle.Render("Picotata ") + headerSlashesStyle.Render(strings.Repeat("/", 71))
+
+	// text := ""
+	// for i := range 16 {
+	// 	a := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(fmt.Sprintf("%v", i)))
+	// 	text = text + a.Render(fmt.Sprintf("///// Text - %v /////\n", i))
+	// }
+	return header + "\n" + fmt.Sprintf(
 		"Input a command\n\n%s\n\n%s\n",
 		m.textInput.View(),
 		m.outputModel.View(),

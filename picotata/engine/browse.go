@@ -8,7 +8,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func Browse(df *Dataframe) (BrowseModel, error) {
+func Browse(df *Dataframe) (*BrowseModel, error) {
 
 	columns := []table.Column{}
 
@@ -41,11 +41,11 @@ func Browse(df *Dataframe) (BrowseModel, error) {
 		Bold(false)
 	s.Selected = s.Selected.
 		Foreground(lipgloss.Color("229")).
-		Background(lipgloss.Color("57")).
+		Background(lipgloss.Color("200")).
 		Bold(false)
 	t.SetStyles(s)
 
-	return BrowseModel{
+	return &BrowseModel{
 		table: t,
 	}, nil
 }
@@ -54,24 +54,24 @@ type BrowseModel struct {
 	table table.Model
 }
 
-func (m BrowseModel) Init() tea.Cmd {
+func (m *BrowseModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m BrowseModel) Update(msg tea.Msg) (EngineModel, tea.Cmd) {
+func (m *BrowseModel) Update(msg tea.Msg) (EngineModel, tea.Cmd) {
 	var cmd tea.Cmd
 	m.table, cmd = m.table.Update(msg)
 	return m, cmd
 }
 
-func (m BrowseModel) View() string {
+func (m *BrowseModel) View() string {
 	return m.table.View() + "\n" + m.table.HelpView()
 }
 
-func (m BrowseModel) Focus() {
+func (m *BrowseModel) Focus() {
 	m.table.Focus()
 }
 
-func (m BrowseModel) Blur() {
+func (m *BrowseModel) Blur() {
 	m.table.Blur()
 }
