@@ -2,25 +2,6 @@ package engine
 
 import tea "github.com/charmbracelet/bubbletea"
 
-type StatementType int
-
-const (
-	QuitStatement = iota
-	ClearStatement
-	MissingStatement
-	InfoStatement
-	HelpStatement
-	LoadStatement
-	CountStatement
-	BrowseStatement
-	SummarizeStatement
-)
-
-type Statement struct {
-	Type StatementType
-	Args []string
-}
-
 // TODO: This REALLY should handle strings... at least parse them or something
 type Dataframe struct {
 	Columns []string

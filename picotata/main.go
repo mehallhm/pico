@@ -126,12 +126,7 @@ type cmdMsg engine.EngineModel
 
 func executeCmd(cmd string) tea.Cmd {
 	return func() tea.Msg {
-		statement, err := engine.PrepareStatement(cmd)
-		if err != nil {
-			return errMsg(err)
-		}
-
-		out, err := engine.ExecuteStatement(statement)
+		out, err := engine.ExecuteV(cmd)
 		if err != nil {
 			return errMsg(err)
 		}

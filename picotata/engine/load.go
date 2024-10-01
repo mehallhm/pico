@@ -11,7 +11,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func Load(df *Dataframe, args []string) (*LoadModel, error) {
+func Load(df *Dataframe, args []string) (EngineModel, error) {
 	if len(args) != 1 {
 		fp := filepicker.New()
 		fp.AllowedTypes = []string{".csv"}
@@ -21,15 +21,23 @@ func Load(df *Dataframe, args []string) (*LoadModel, error) {
 		return &LoadModel{fp: fp}, nil
 	}
 
-	f, err := os.Open(args[0])
-	if err != nil {
+	if err := loadData(df, args[0]); err != nil {
 		return nil, err
+	}
+
+	return &LoadModel{text: "Loaded!", df: df}, nil
+}
+
+func loadData(df *Dataframe, filename string) error {
+	f, err := os.Open(filename)
+	if err != nil {
+		return err
 	}
 
 	r := csv.NewReader(f)
 	records, err := r.ReadAll()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	df.Columns = records[0]
@@ -47,7 +55,7 @@ func Load(df *Dataframe, args []string) (*LoadModel, error) {
 
 	df.Data = table
 
-	return &LoadModel{text: "Loaded!", df: df}, nil
+	return nil
 }
 
 type LoadModel struct {
@@ -79,7 +87,11 @@ func (m *LoadModel) Update(msg tea.Msg) (EngineModel, tea.Cmd) {
 	if didSelect, path := m.fp.DidSelectFile(msg); didSelect {
 		// Get the path of the selected file.
 		m.selectedFile = path
-		m, m.err = Load(df, []string{path})
+		if err := loadData(df, path); err != nil {
+			m.err = err
+			return m, nil
+		}
+		m = &LoadModel{text: "Loaded!", df: df}
 		return m, nil
 	}
 

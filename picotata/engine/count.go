@@ -6,9 +6,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-var _ EngineModel = CountModel{}
-
-func Count(df *Dataframe) (CountModel, error) {
+func Count(df *Dataframe, _ []string) (EngineModel, error) {
 	model := CountModel{
 		text:    fmt.Sprintf("Count: %v", len(df.Data[df.Columns[0]])),
 		focused: false,

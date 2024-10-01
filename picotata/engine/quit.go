@@ -4,7 +4,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func Quit() (QuitModel, error) {
+func Quit(_ *Dataframe, _ []string) (EngineModel, error) {
 	model := QuitModel("exiting...")
 
 	return model, nil

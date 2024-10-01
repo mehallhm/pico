@@ -2,7 +2,7 @@ package engine
 
 import tea "github.com/charmbracelet/bubbletea"
 
-func Clear() (*clearModel, error) {
+func Clear(_ *Dataframe, _ []string) (EngineModel, error) {
 	return &clearModel{}, nil
 }
 

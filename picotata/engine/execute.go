@@ -1,38 +1,30 @@
 package engine
 
+import "strings"
+
 var df *Dataframe = &Dataframe{}
 
-type DisplayType int
-
-const (
-	TextDisplay = iota
-	FileDisplay
-	TableDisplay
-)
-
-type FunctionReturn struct {
-	Text string
-	Form DisplayType
-	Data Dataframe
+type Command struct {
+	command string
+	def     func(df *Dataframe, args []string) (EngineModel, error)
 }
 
-func ExecuteStatement(statement *Statement) (EngineModel, error) {
-	switch statement.Type {
-	case QuitStatement:
-		return Quit()
-	case ClearStatement:
-		return Clear()
-	// case HelpStatement:
-	// 	return FunctionReturn{Form: TextDisplay, Text: "no help for you"}, nil
-	case LoadStatement:
-		return Load(df, statement.Args)
-	case CountStatement:
-		return Count(df)
-	case BrowseStatement:
-		return Browse(df)
-		// case SummarizeStatement:
-		// 	return FunctionReturn{Form: TextDisplay, Text: "counts here"}, nil
-	default:
-		return TextModel{Text: "cmd not found"}, nil
+var Cmds []Command = []Command{
+	{"quit", Quit},
+	{"clear", Clear},
+	{"load", Load},
+	{"browse", Browse},
+	{"count", Count},
+}
+
+func ExecuteV(statement string) (EngineModel, error) {
+	input := strings.TrimSpace(statement)
+	args := strings.Split(input, " ")
+	for _, cmd := range Cmds {
+		if strings.HasPrefix(input, cmd.command) {
+			return cmd.def(df, args[1:])
+		}
 	}
+
+	return TextModel{Text: "cmd not found"}, nil
 }

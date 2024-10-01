@@ -8,7 +8,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func Browse(df *Dataframe) (*BrowseModel, error) {
+func Browse(df *Dataframe, _ []string) (EngineModel, error) {
 
 	columns := []table.Column{}
 
