@@ -6,6 +6,7 @@ type StatementType int
 
 const (
 	QuitStatement = iota
+	ClearStatement
 	MissingStatement
 	InfoStatement
 	HelpStatement

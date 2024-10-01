@@ -37,6 +37,10 @@ func PrepareStatement(input string) (*Statement, error) {
 		return &Statement{
 			Type: BrowseStatement,
 		}, nil
+	case strings.HasPrefix(input, "clear"):
+		return &Statement{
+			Type: ClearStatement,
+		}, nil
 	default:
 		return &Statement{
 			Type: MissingStatement,

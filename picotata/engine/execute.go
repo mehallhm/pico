@@ -20,6 +20,8 @@ func ExecuteStatement(statement *Statement) (EngineModel, error) {
 	switch statement.Type {
 	case QuitStatement:
 		return Quit()
+	case ClearStatement:
+		return Clear()
 	// case HelpStatement:
 	// 	return FunctionReturn{Form: TextDisplay, Text: "no help for you"}, nil
 	case LoadStatement:
