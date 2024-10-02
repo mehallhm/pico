@@ -1,6 +1,9 @@
 package engine
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 var df *Dataframe = &Dataframe{}
 
@@ -26,5 +29,5 @@ func ExecuteV(statement string) (EngineModel, error) {
 		}
 	}
 
-	return TextModel{Text: "cmd not found"}, nil
+	return nil, fmt.Errorf("cmd not found")
 }

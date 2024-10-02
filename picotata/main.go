@@ -29,9 +29,11 @@ type model struct {
 	err error
 }
 
-var promptStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("200")).Bold(true)
+var promptStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("5")).Bold(true)
 
-var logoStyle = lipgloss.NewStyle().Padding(0, 2).Foreground(lipgloss.Color("61"))
+var logoStyle = lipgloss.NewStyle().Padding(0, 2).Foreground(lipgloss.Color("10"))
+
+var errStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Bold(true)
 
 func initalModel() model {
 	ti := textinput.New()
@@ -81,6 +83,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case tea.KeyEnter:
+			m.err = nil
 			if m.textInput.Focused() {
 				val := m.textInput.Value()
 				m.textInput.SetValue("")
@@ -110,16 +113,29 @@ var headerSlashesStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
 func (m model) View() string {
 	header := headerTextStyle.Render("Picotata ") + headerSlashesStyle.Render(strings.Repeat("/", 71))
 
-	// text := ""
-	// for i := range 16 {
-	// 	a := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(fmt.Sprintf("%v", i)))
-	// 	text = text + a.Render(fmt.Sprintf("///// Text - %v /////\n", i))
-	// }
-	return header + "\n" + fmt.Sprintf(
-		"Input a command\n\n%s\n\n%s\n",
-		m.textInput.View(),
-		m.outputModel.View(),
-	)
+	var sb strings.Builder
+
+	sb.WriteString(header)
+
+	text := ""
+	for i := range 16 {
+		a := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(fmt.Sprintf("%v", i)))
+		text = text + a.Render(fmt.Sprintf("///// Text - %v /////\n", i))
+	}
+
+	sb.WriteString("\n" + text + "\n")
+	sb.WriteString("\n")
+	sb.WriteString(m.textInput.View() + "\n")
+	if m.err != nil {
+		sb.WriteString(errStyle.Render("Error: " + m.err.Error() + "\n"))
+		m.outputModel = nil
+	}
+
+	if m.outputModel != nil {
+		sb.WriteString(m.outputModel.View())
+	}
+
+	return sb.String()
 }
 
 type cmdMsg engine.EngineModel
