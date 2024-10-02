@@ -9,6 +9,9 @@ import (
 )
 
 func Browse(df *Dataframe, _ []string) (EngineModel, error) {
+	if len(df.Columns) == 0 {
+		return nil, fmt.Errorf("data not loaded")
+	}
 
 	columns := []table.Column{}
 
@@ -40,8 +43,8 @@ func Browse(df *Dataframe, _ []string) (EngineModel, error) {
 		BorderBottom(true).
 		Bold(false)
 	s.Selected = s.Selected.
-		Foreground(lipgloss.Color("229")).
-		Background(lipgloss.Color("200")).
+		Foreground(lipgloss.Color("0")).
+		Background(lipgloss.Color("10")).
 		Bold(false)
 	t.SetStyles(s)
 

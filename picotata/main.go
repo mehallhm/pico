@@ -31,9 +31,9 @@ type model struct {
 
 var promptStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("5")).Bold(true)
 
-var logoStyle = lipgloss.NewStyle().Padding(0, 2).Foreground(lipgloss.Color("10"))
+var logoStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
 
-var errStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Bold(true)
+var errStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Padding(1, 2).Bold(true)
 
 func initalModel() model {
 	ti := textinput.New()
@@ -108,23 +108,23 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 var headerTextStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("2"))
-var headerSlashesStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
+var headerSlashesStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("2")).Padding(0, 0, 1)
+var outputStyle = lipgloss.NewStyle().Padding(1, 2)
 
 func (m model) View() string {
-	header := headerTextStyle.Render("Picotata ") + headerSlashesStyle.Render(strings.Repeat("/", 71))
+	header := headerTextStyle.Render("picotata ") + headerSlashesStyle.Render(strings.Repeat("/", 71))
 
 	var sb strings.Builder
 
-	sb.WriteString(header)
+	sb.WriteString(header + "\n")
 
-	text := ""
-	for i := range 16 {
-		a := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(fmt.Sprintf("%v", i)))
-		text = text + a.Render(fmt.Sprintf("///// Text - %v /////\n", i))
-	}
-
-	sb.WriteString("\n" + text + "\n")
-	sb.WriteString("\n")
+	// text := ""
+	// for i := range 16 {
+	// 	a := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(fmt.Sprintf("%v", i)))
+	// 	text = text + a.Render(fmt.Sprintf("///// Text - %v /////\n", i))
+	// }
+	//
+	// sb.WriteString("\n" + text + "\n")
 	sb.WriteString(m.textInput.View() + "\n")
 	if m.err != nil {
 		sb.WriteString(errStyle.Render("Error: " + m.err.Error() + "\n"))
@@ -132,7 +132,7 @@ func (m model) View() string {
 	}
 
 	if m.outputModel != nil {
-		sb.WriteString(m.outputModel.View())
+		sb.WriteString(outputStyle.Render(m.outputModel.View()))
 	}
 
 	return sb.String()

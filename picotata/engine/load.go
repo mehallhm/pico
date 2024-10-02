@@ -25,7 +25,7 @@ func Load(df *Dataframe, args []string) (EngineModel, error) {
 		return nil, err
 	}
 
-	return &LoadModel{text: "Loaded!", df: df}, nil
+	return &LoadModel{text: "data loaded", df: df}, nil
 }
 
 func loadData(df *Dataframe, filename string) error {
@@ -109,15 +109,12 @@ func (m *LoadModel) Update(msg tea.Msg) (EngineModel, tea.Cmd) {
 
 func (m *LoadModel) View() string {
 	var s strings.Builder
-	s.WriteString("\n  ")
 	s.WriteString(m.text)
 	if m.fp.Height > 0 {
 		if m.err != nil {
 			s.WriteString(m.fp.Styles.DisabledFile.Render(m.err.Error()))
 		} else if m.selectedFile == "" {
-			s.WriteString("Pick a file:")
-		} else {
-			s.WriteString("Selected file: " + m.fp.Styles.Selected.Render(m.selectedFile))
+			s.WriteString("select the data:")
 		}
 		s.WriteString("\n" + m.fp.View())
 	}

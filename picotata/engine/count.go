@@ -7,6 +7,10 @@ import (
 )
 
 func Count(df *Dataframe, _ []string) (EngineModel, error) {
+	if len(df.Columns) == 0 {
+		return nil, fmt.Errorf("data not loaded")
+	}
+
 	model := CountModel{
 		text:    fmt.Sprintf("Count: %v", len(df.Data[df.Columns[0]])),
 		focused: false,
